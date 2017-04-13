@@ -27,10 +27,7 @@ function Board(n) {
     };
 
     this.tryNewRow = function(queens) {
-        this.afterRefresh(queens, 0).then(
-            (args) => {
-                let _this = args.shift();
-                _this.tryCol(args[0], args[1]); });
+        this.afterRefresh(queens, this.tryCol, queens, 0);
     };
 
     this.tryCol = function(queens, col) {
@@ -48,10 +45,7 @@ function Board(n) {
             }
             else {
                 let newcol = queens.pop();
-                this.afterRefresh(queens, newcol + 1).then(
-                    (args) => {
-                        let _this = args.shift();
-                        _this.tryCol(args[0], args[1]); });
+                this.afterRefresh(queens, this.tryCol, queens, newcol+1);
             }
         }
         else if (queens.length == this.bsize -1) {
@@ -59,11 +53,7 @@ function Board(n) {
             this.found++;
             record_result(this, queens);
             queens.pop();
-            this.afterRefresh(queens, col + 1).then(
-                (args) => {
-                    let _this = args.shift();
-                    _this.tryCol(args[0], args[1]);
-                });
+            this.afterRefresh(queens, this.tryCol, queens, col+1);
         }
         else {
             queens.push(col);
@@ -73,17 +63,16 @@ function Board(n) {
 
     this.afterRefresh = function() {
         let args = Array.prototype.slice.call(arguments),
-            queens = args[0];
-
+            queens = args.shift(),
+            fun = args.shift();
+        
         refresh_display(this, queens);
-        args.unshift(this);
-        return new Promise(function (resolve) {
-            setTimeout(function (a) {
-//                resolve.apply(undefined, args);
-                console.log(a);
-                resolve(a);
-            }, 1, args);} );
+        let p1 = new Promise(function (resolve) {
+            setTimeout((a) => resolve(a), 1, args);});
+        p1.then((args) => fun.apply(this, args));
+
     };
+
 
     this.toShow = function(positions, flag) {
         let seq = Array.from({length: n}, (v,k) => k),
