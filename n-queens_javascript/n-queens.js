@@ -1,6 +1,10 @@
 function Board(n) {
     this.bsize = n;       // board size = n x n
     this.found = 0;
+    this.wait = 100;
+    const MODE_PLAY=0, MODE_PAUSED=1, MODE_STEP=2;
+    this.mode = MODE_PLAY;
+    this.saved_state = undefined;
 
     // return an n*n array
     this.place = function(queens) {
@@ -26,14 +30,50 @@ function Board(n) {
 	this.tryNewRow([]);
     };
 
+    this.play = function(w) {
+        let oldmode = this.mode;
+        this.wait = w;
+        this.mode = MODE_PLAY;
+
+        if (oldmode === MODE_PAUSED && this.saved_state) {
+            this.cont();
+        }
+    };
+
+    this.step = function() {
+        let oldmode = this.mode;
+        this.mode = MODE_STEP;
+
+        if (oldmode === MODE_PAUSED && this.saved_state)
+            this.cont();
+    };
+            
+    this.pause = function() { this.mode = MODE_PAUSED; };
+
+
+    this.cont = function() {
+        let queens = this.saved_state[0],
+            col = this.saved_state[1];
+
+        this.saved_state = undefined;
+        this.tryCol(queens, col);
+    };
+
     this.tryNewRow = function(queens) {
         this.afterRefresh(queens, this.tryCol, queens, 0);
     };
 
     this.tryCol = function(queens, col) {
+        if (this.mode === MODE_PAUSED) {
+            this.saved_state = [queens, col];
+            return;
+        }
+        else if (this.mode === MODE_STEP)
+            this.mode = MODE_PAUSED;
+
+
         let marks = this.place(queens),
             row = queens.length;
-        console.log(row + "," + col + "," + queens);
 
         while (col < this.bsize && marks[row][col] !== ' ')
             ++col;
@@ -52,8 +92,10 @@ function Board(n) {
             queens.push(col);
             this.found++;
             record_result(this, queens);
-            queens.pop();
-            this.afterRefresh(queens, this.tryCol, queens, col+1);
+            this.afterRefresh(queens, (q, c) =>{
+                q.pop();
+                this.afterRefresh(q, this.tryCol, q, c+1);
+            }, queens, col);
         }
         else {
             queens.push(col);
@@ -61,16 +103,20 @@ function Board(n) {
         }
     };
 
+    this.afterDelay = function(wait, fun, args) {
+        let p1 = new Promise(function (resolve) {
+            setTimeout((a) => resolve(a), wait, args);});
+        p1.then((_a) => fun.apply(this, _a));
+    };
+
     this.afterRefresh = function() {
         let args = Array.prototype.slice.call(arguments),
             queens = args.shift(),
-            fun = args.shift();
+            fun = args.shift(),
+            wait = this.wait;
         
         refresh_display(this, queens);
-        let p1 = new Promise(function (resolve) {
-            setTimeout((a) => resolve(a), 1, args);});
-        p1.then((args) => fun.apply(this, args));
-
+        this.afterDelay(wait, fun, args);
     };
 
 

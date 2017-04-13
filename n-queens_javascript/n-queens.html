@@ -9,21 +9,25 @@
     function test2() {
       document.getElementsByName("main")[0].innerHTML= new Board(8).toShow([0,3,5], true);
     }
-    function test3() {
-       var board = new Board(8);
+    //
+    var board;
+    function solveNQueens() {
+       board = new Board(8);
        board.putQueens();
     }
   </script>
 </head>
-<body onload="test3()">
+<body onload="solveNQueens()">
 <h1>N-Queens</h1>
 <div name="main" align="center">
 </div>
 <div align="center" name="control">
   <form>
-    <button type="button" name="step">step</button>
-    <button type="button" name="pause">||</button>
-    <button type="button" name="play">|></button>
+    <button type="button" name="step" onClick="board.step()">step</button>
+    <button type="button" name="pause" onClick="board.pause()">||</button>
+    <button type="button" name="play0" onClick="board.play(1000)">|&gt;</button>
+    <button type="button" name="play1" onClick="board.play(100)">|&gt;&gt;</button>
+    <button type="button" name="play2" onClick="board.play(0)">|&gt;&gt;&gt;</button>
   </form>
 </div>
 <hr>
