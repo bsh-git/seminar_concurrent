@@ -15,20 +15,42 @@
        board = new Board(8);
        board.putQueens();
     }
+
+    function restart() {
+        let fld = document.getElementById("boardsize"),
+            newsize = parseInt(fld.value),
+            msg = document.getElementById("boardsize_msg");
+        
+
+        if (isNaN(newsize) || newsize <= 0) {
+            msg.value = "bad value";
+        }
+        else {
+            msg.value = "";
+        }
+
+        board.stop();
+        board = new Board(newsize);
+        clear_display();
+        board.putQueens();
+    }
   </script>
 </head>
 <body onload="solveNQueens()">
 <h1>N-Queens</h1>
+<div align="center">
+  N = <input type="text" id="boardsize" size=4 maxsize=2
+		   value="8" onChange="restart()">
+    <output id="boardsize_msg"></output>
+</div>
 <div name="main" align="center">
 </div>
 <div align="center" name="control">
-  <form>
     <button type="button" name="step" onClick="board.step()">step</button>
     <button type="button" name="pause" onClick="board.pause()">||</button>
     <button type="button" name="play0" onClick="board.play(1000)">|&gt;</button>
     <button type="button" name="play1" onClick="board.play(100)">|&gt;&gt;</button>
     <button type="button" name="play2" onClick="board.play(0)">|&gt;&gt;&gt;</button>
-  </form>
 </div>
 <hr>
 <div name="result_count" align="center">found 0 patterns</div>

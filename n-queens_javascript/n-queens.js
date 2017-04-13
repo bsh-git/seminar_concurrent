@@ -2,7 +2,7 @@ function Board(n) {
     this.bsize = n;       // board size = n x n
     this.found = 0;
     this.wait = 100;
-    const MODE_PLAY=0, MODE_PAUSED=1, MODE_STEP=2;
+    const MODE_PLAY=0, MODE_PAUSED=1, MODE_STEP=2, MODE_STOP = 3;
     this.mode = MODE_PLAY;
     this.saved_state = undefined;
 
@@ -30,6 +30,8 @@ function Board(n) {
 	this.tryNewRow([]);
     };
 
+    this.stop = function() { this.mode = MODE_STOP; };
+
     this.play = function(w) {
         let oldmode = this.mode;
         this.wait = w;
@@ -52,11 +54,13 @@ function Board(n) {
 
 
     this.cont = function() {
-        let queens = this.saved_state[0],
-            col = this.saved_state[1];
+        if (this.mode !== MODE_STOP) {
+            let queens = this.saved_state[0],
+                col = this.saved_state[1];
 
-        this.saved_state = undefined;
-        this.tryCol(queens, col);
+            this.saved_state = undefined;
+            this.tryCol(queens, col);
+        }
     };
 
     this.tryNewRow = function(queens) {
@@ -106,7 +110,10 @@ function Board(n) {
     this.afterDelay = function(wait, fun, args) {
         let p1 = new Promise(function (resolve) {
             setTimeout((a) => resolve(a), wait, args);});
-        p1.then((_a) => fun.apply(this, _a));
+        p1.then((_a) => {
+            if (this.mode !== MODE_STOP)
+                fun.apply(this, _a);
+        });
     };
 
     this.afterRefresh = function() {
@@ -165,4 +172,10 @@ function record_result(board, positions) {
 
 function refresh_display(board, positions) {
     document.getElementsByName("main")[0].innerHTML = board.toShow(positions, true);
+}
+
+function clear_display() {
+    document.getElementsByName("result_count")[0].innerHTML = "found 0 patterns";
+    document.getElementsByName("results")[0].innerHTML = "";
+
 }
