@@ -1,0 +1,39 @@
+table {
+    border-width: thin;
+    border-color: black;
+    border-style: none;
+    border-spacing: 2px;
+    margin: 10px;
+}
+
+td.tdeven {
+    text-align: center;
+    width: 30px;
+    height: 30px;
+    background-color: wheat;
+}
+
+td.tdodd {
+    text-align: center;
+    width: 30px;
+    height: 30px;
+    background-color: brown;
+}
+td.tdvalid {
+    text-align: center;
+    width: 30px;
+    height: 30px;
+    background-color: white;
+}
+td.tdinval {
+    text-align: center;
+    width: 30px;
+    height: 30px;
+    background-color: gray;
+}
+td.tdqueen {
+    text-align: center;
+    width: 30px;
+    height: 30px;
+    background-color: white;
+}

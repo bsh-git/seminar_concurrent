@@ -1,0 +1,29 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <title>N-Queens</title>
+  <link rel="stylesheet" type="text/css" href="./n-queens.css"/>
+  <script src="./n-queens.js" charset="utf-8"></script>
+  <script>
+    function test1() {
+      document.getElementsByName("main")[0].innerHTML= new Board(8).toShow([1,3,5]);
+    }
+    function test2() {
+      document.getElementsByName("main")[0].innerHTML= new Board(8).toShow([0,3,5], true);
+    }
+    function test3() {
+       var board = new Board(8);
+       board.putQueens();
+    }
+  </script>
+</head>
+<body onload="test3()">
+<h1>N-Queens</h1>
+<div name="main" align="center">
+</div>
+<hr>
+<div name="result_count" align="center">found 0 patterns</div>
+<hr>
+<div name="results">
+</div>
+
+
+</body></html>
