@@ -131,25 +131,23 @@ class NQueens {
     }
 
     static class SolverParallel1 extends Solver {
-	SolverThread threads [];
+	SolverProc proc [];
 
 	SolverParallel1(int size) {
 	    super(size);
-	    threads = new SolverThread[boardSize];
+	    proc = new SolverProc[boardSize];
 	}
 
 	List<int []> solve() {
 	    List<int []> result = new ArrayList<int []>();
 	    
 	    for (int c=0; c < boardSize; ++c) {
-		threads[c] = new SolverThread(c);
-		threads[c].start();
+		proc[c] = new SolverProc(c);
 	    }
 
-	    for (SolverThread th: threads) {
+	    for (SolverProc p: proc) {
 		try {
-		    th.join();
-		    result.addAll(th.getResult());
+		    result.addAll(p.getResult());
 		} catch (InterruptedException e) {
 		    System.err.println("Something wrong happend in a solver thread: " + e.toString());
 		}
@@ -158,13 +156,16 @@ class NQueens {
 	    return result;
 	}
 
-	class SolverThread extends Thread {
+	class SolverProc implements Runnable {
 	    private int startCol;
 	    private List<int []> result;
 	    private long startTime, endTime;
+	    private Thread thread;
 	    
-	    SolverThread(long col) {
-		startCol = (int)col;
+	    SolverProc(int col) {
+		startCol = col;
+		thread = new Thread(this);
+		thread.start();
 	    }
 
 	    public void run() {
@@ -176,7 +177,8 @@ class NQueens {
 		endTime = System.nanoTime();
 	    }
 
-	    public List<int []>getResult() {
+	    public List<int []>getResult() throws InterruptedException {
+		thread.join();
 		return result;
 	    }
 
@@ -187,8 +189,8 @@ class NQueens {
 	}
 
 	void printReport() {
-	    for (int i = 0; i < threads.length; ++i) {
-		System.out.printf("[%d] %f msecs\n", i, threads[i].getExcutionTime() / 1000000.0);
+	    for (int i = 0; i < proc.length; ++i) {
+		System.out.printf("[%d] %f msecs\n", i, proc[i].getExcutionTime() / 1000000.0);
 	    }
 	}
 
