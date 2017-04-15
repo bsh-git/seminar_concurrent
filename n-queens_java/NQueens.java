@@ -2,23 +2,28 @@ import java.util.*;
 import gnu.getopt.Getopt;
 
 class NQueens {
-    static void usage() {
-	System.err.println("Usage: NQueens [n]");
+    static void usage_and_exit() {
+	System.err.println("Usage_And_Exit: NQueens [n]");
     }
 
     public static void main(String[] args) {
-	Getopt options = new Getopt("NQueens", args, "q");
+	Getopt options = new Getopt("NQueens", args, "qp:");
 	int c;
 	int boardsize = 8;
 	boolean nolist = false;
-
+	int howto = 0;
+	Solver solver = null;
+	
 	while ((c = options.getopt()) != -1) {
 	    switch (c) {
 	    case 'q':
 		nolist = true;
 		break;
+	    case 'p':
+		howto = Integer.parseUnsignedInt(options.getOptarg());
+		break;
 	    default:
-		usage();
+		usage_and_exit();
 	    }
 	}
 
@@ -33,11 +38,20 @@ class NQueens {
 	}
 	else {
 	    System.err.println("Too many arguments");
-	    usage();
+	    usage_and_exit();
 	}
 
+	switch (howto) {
+	case 0: solver = new SolverSimple(boardsize); break;
+	case 1: solver = new SolverParallel1(boardsize); break;
+	default:
+	    System.err.println("Bad argument to -p");
+	    usage_and_exit();
+	}
+
+	 
 	long startTime = System.nanoTime();
-	List <int []> patterns = new Solver(boardsize).run();
+	List <int []> patterns = solver.solve();
 	long endTime = System.nanoTime();
 
 	System.out.printf("%d-Queens solved in %f msecs\n", boardsize, (endTime - startTime)/ 1000000.0);
@@ -53,20 +67,19 @@ class NQueens {
 		System.out.println("");
 	    }
 	}
+
+	solver.printReport();
     }
 
-    static class Solver {
+    static abstract class Solver {
 	int boardSize;
 
 	Solver(int size) {
 	    boardSize = size;
 	}
 
-	List<int []> run() {
-	    int queens[] = new int[boardSize];
-	    
-	    return tryNewRow(0, queens);
-	}
+	abstract List<int []> solve();
+	abstract void printReport();
 
 	List<int []> tryNewRow(int row, int [] queens) {
 	    List <int []> result = new ArrayList<int []>();
@@ -87,7 +100,6 @@ class NQueens {
 		    queens[row] = c;
 		    if (row == boardSize - 1) {
 			// found a pattern
-			
 			result.add(queens.clone());
 		    }
 		    else {
@@ -99,7 +111,87 @@ class NQueens {
 
 	    return result;
 	}
+	
+    };
+
+    static class SolverSimple extends Solver {
+	SolverSimple(int size) {
+	    super(size);
+	}
+
+	List<int []> solve() {
+	    int queens[] = new int[boardSize];
+	    
+	    return tryNewRow(0, queens);
+	}
+
+	void printReport() {
+	    // nothing to report.
+	}
     }
 
+    static class SolverParallel1 extends Solver {
+	SolverThread threads [];
+
+	SolverParallel1(int size) {
+	    super(size);
+	    threads = new SolverThread[boardSize];
+	}
+
+	List<int []> solve() {
+	    List<int []> result = new ArrayList<int []>();
+	    
+	    for (int c=0; c < boardSize; ++c) {
+		threads[c] = new SolverThread(c);
+		threads[c].start();
+	    }
+
+	    for (SolverThread th: threads) {
+		try {
+		    th.join();
+		    result.addAll(th.getResult());
+		} catch (InterruptedException e) {
+		    System.err.println("Something wrong happend in a solver thread: " + e.toString());
+		}
+	    }
+
+	    return result;
+	}
+
+	class SolverThread extends Thread {
+	    private int startCol;
+	    private List<int []> result;
+	    private long startTime, endTime;
+	    
+	    SolverThread(long col) {
+		startCol = (int)col;
+	    }
+
+	    public void run() {
+		int queens[] = new int[boardSize];
+
+		queens[0] = startCol;
+		startTime = System.nanoTime();
+		result = tryNewRow(1, queens);
+		endTime = System.nanoTime();
+	    }
+
+	    public List<int []>getResult() {
+		return result;
+	    }
+
+	    public long getExcutionTime() {
+		// System.out.printf("%d %d\n", startTime, endTime);
+		return endTime - startTime;
+	    }
+	}
+
+	void printReport() {
+	    for (int i = 0; i < threads.length; ++i) {
+		System.out.printf("[%d] %f msecs\n", i, threads[i].getExcutionTime() / 1000000.0);
+	    }
+	}
+
+    }
 
 }
