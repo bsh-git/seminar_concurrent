@@ -1,4 +1,4 @@
-JAVAC=openjdk8-javac
+JAVAC=openjdk8-javac -encoding UTF-8
 CLASSPATHOPT= -cp /u01/local/lib/java/java-getopt-1.0.14.jar
 
 

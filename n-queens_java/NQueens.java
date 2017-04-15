@@ -54,7 +54,7 @@ class NQueens {
 	List <int []> patterns = solver.solve();
 	long endTime = System.nanoTime();
 
-	System.out.printf("%d-Queens solved in %f msecs\n", boardsize, (endTime - startTime)/ 1000000.0);
+	System.out.printf("%d-Queens solved in %f msecs. found %d patterns\n", boardsize, (endTime - startTime)/ 1000000.0, patterns.size());
 	if (!nolist) {
 	    for (int[] a: patterns) {
 		boolean needcomma = false;
@@ -81,22 +81,23 @@ class NQueens {
 	abstract List<int []> solve();
 	abstract void printReport();
 
+	static boolean canPutQueen(int row, int col, int [] queens) {
+	    for (int r = 0; r < row; ++r) {
+		if (queens[r] == col ||
+		    queens[r] - col == row - r ||
+		    queens[r] - col == r - row) {
+		    // can't put a new queen here.
+		    return false;
+		}
+	    }
+	    return true;
+	}
+
 	List<int []> tryNewRow(int row, int [] queens) {
 	    List <int []> result = new ArrayList<int []>();
 
 	    for (int c = 0; c < boardSize; ++c) {
-		boolean ok = true;
-		for (int r = 0; r < row; ++r) {
-		    if (queens[r] == c ||
-			queens[r] - c == row - r ||
-			queens[r] - c == r - row) {
-			// can't put a new queen here.
-			ok = false;
-			break;
-		    }
-		}
-
-		if (ok) {
+		if (canPutQueen(row, c, queens)) {
 		    queens[row] = c;
 		    if (row == boardSize - 1) {
 			// found a pattern
@@ -112,8 +113,11 @@ class NQueens {
 	    return result;
 	}
 	
-    };
+    }
 
+    //
+    // 解法1: 単純な、深さ優先バックトラック
+    //
     static class SolverSimple extends Solver {
 	SolverSimple(int size) {
 	    super(size);
@@ -130,6 +134,9 @@ class NQueens {
 	}
     }
 
+    //
+    // 解法2: 最初の行の各桁に対して一つずつスレッドを起動する
+    //
     static class SolverParallel1 extends Solver {
 	SolverProc proc [];
 
@@ -195,5 +202,4 @@ class NQueens {
 	}
 
     }
-
 }
