@@ -1,14 +1,27 @@
 JAVAC=openjdk8-javac -encoding UTF-8
-CLASSPATHOPT= -cp /u01/local/lib/java/java-getopt-1.0.14.jar
+NQUEENS_PACKAGE_DIR=jp/co/genetec/rdseminar/nqueens
+CLASSPATHOPT= -cp /u01/local/lib/java/java-getopt-1.0.14.jar:.
+
 
 
 .SUFFIXES: .java .class
 
-NQueens.class: NQueens.java
-	$(JAVAC) $(CLASSPATHOPT) $*.java
+
+PACKAGE_SRCS = $(NQUEENS_PACKAGE_DIR)/Solver.java \
+	$(NQUEENS_PACKAGE_DIR)/SolverSimple.java \
+	$(NQUEENS_PACKAGE_DIR)/SolverParallel1.java \
+	$(NQUEENS_PACKAGE_DIR)/SolverParallel2.java
+
+PACKAGE_CLASSES = $(PACKAGE_SRCS:.java=.class)
+
+NQueens.class: NQueens.java # $(PACKAGE_SRCS)
+	$(JAVAC) $(CLASSPATHOPT) $*.java $(PACKAGE_SRCS)
+
+$(PACKAGE_CLASSES): $(PACKAGE_SRCS)
+	$(JAVAC) $(CLASSPATHOPT) $(PACKAGE_SRCS)
 
 
 
 .PHONY: check-syntax
 check-syntax:
-	$(JAVAC) $(CLASSPATHOPT) -Xlint $(CHK_SOURCES) 2>&1 | tee /tmp/fm.log
+	$(JAVAC) $(CLASSPATHOPT) -Xlint $(CHK_SOURCES)
