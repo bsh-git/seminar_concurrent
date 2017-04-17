@@ -6,15 +6,17 @@ import jp.co.genetec.rdseminar.nqueens.*;
 class NQueens {
     static void usage_and_exit() {
 	System.err.println("Usage_And_Exit: NQueens [n]");
+	System.exit(1);
     }
 
     public static void main(String[] args) {
-	Getopt options = new Getopt("NQueens", args, "qp:");
+	Getopt options = new Getopt("NQueens", args, "qp:t:");
 	int c;
 	int boardsize = 8;
 	boolean nolist = false;
 	int howto = 0;
 	Solver solver = null;
+	int nthreads = 0;
 	
 	while ((c = options.getopt()) != -1) {
 	    switch (c) {
@@ -23,6 +25,9 @@ class NQueens {
 		break;
 	    case 'p':
 		howto = Integer.parseUnsignedInt(options.getOptarg());
+		break;
+	    case 't':
+		nthreads = Integer.parseUnsignedInt(options.getOptarg());
 		break;
 	    default:
 		usage_and_exit();
@@ -46,7 +51,12 @@ class NQueens {
 	switch (howto) {
 	case 0: solver = new SolverSimple(boardsize); break;
 	case 1: solver = new SolverParallel1(boardsize); break;
-	case 2: solver = new SolverParallel2(boardsize); break;
+	case 2:
+	    if (nthreads > 0)
+		solver = new SolverParallel2(boardsize, nthreads);
+	    else
+		solver = new SolverParallel2(boardsize);
+	    break;
 	default:
 	    System.err.println("Bad argument to -p");
 	    usage_and_exit();

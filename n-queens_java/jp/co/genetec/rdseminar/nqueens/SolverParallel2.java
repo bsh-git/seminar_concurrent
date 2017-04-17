@@ -12,17 +12,22 @@ public class SolverParallel2 extends Solver {
     int threadCreatedCount = 0;
     int activeThreads = 0;
     int maxActiveThreads = 0;
+    int taskCount = 0;
+    int threadLimit = Integer.MAX_VALUE;
 	
-    public SolverParallel2(int size) {
+    public SolverParallel2(int size, int... options) {
 	super(size);
+	if (options.length >= 1) {
+	    threadLimit = options[0];
+	}
     }
 
     public List<int []> solve() {
 	int queens[] = new int[boardSize];
-	return tryNewRow(0, queens);
+	return tryNewRow2(0, queens);
     }
 
-    List<int []> tryNewRow(int row, int [] queens) {
+    List<int []> tryNewRow2(int row, int [] queens) {
 	List<int []> result = new ArrayList<int []>();
 	int possibleCols[] = new int[boardSize + 1];
 
@@ -51,15 +56,17 @@ public class SolverParallel2 extends Solver {
 	    for (int i=0; i < ncols; ++i) {
 		SolverTask task = null;
 		int col = possibleCols[i];
-		if (i < ncols-1)
+		if (taskCount < threadLimit /*&& i < ncols-1*/) {
+		    ++taskCount;
 		    task = startNewTask(row, col, queens);
+		}
 		if (task != null) {
 		    tasks[nTasks++] = task;
 		}
 		else {
 		    // 最後の桁、またはこれ以上スレッドを増せない時、このスレッドで続きを計算する
 		    queens[row] = col;
-		    result.addAll(tryNewRow(row + 1, queens));
+		    result.addAll(tryNewRow2(row + 1, queens));
 		}
 	    }
 
@@ -89,16 +96,16 @@ public class SolverParallel2 extends Solver {
 	    task.start();
 	}
 	catch (java.lang.OutOfMemoryError e) {
-	    synchronized (this) {
-		threadStartFailCount++;
-	    }
+	    //	    synchronized (this) {
+	    //		threadStartFailCount++;
+	    //}
 	    return null;
 	}
-	synchronized (this) {
-	    activeThreads++;
-	    if (activeThreads > maxActiveThreads)
-		maxActiveThreads = activeThreads;
-	}
+	// synchronized (this) {
+	//     activeThreads++;
+	//     if (activeThreads > maxActiveThreads)
+	// 	maxActiveThreads = activeThreads;
+	// }
 	return task;
     }
 
@@ -115,9 +122,9 @@ public class SolverParallel2 extends Solver {
 	    queens = q.clone();
 	    queens[row] = col;
 	    thread = new Thread(this);
-	    synchronized (this) {
-		threadCreatedCount++;
-	    }
+	    // synchronized (this) {
+	    // 	threadCreatedCount++;
+	    // }
 	}
 
 	public void start() {
@@ -132,9 +139,9 @@ public class SolverParallel2 extends Solver {
 
 	public List<int []>getResult() throws InterruptedException {
 	    thread.join();
-	    synchronized (this) {
-		--activeThreads;
-	    }
+	    // synchronized (this) {
+	    // 	--activeThreads;
+	    // }
 	    if (result == null) {
 		System.err.println("Something wrong happend in thread");
 		return (new ArrayList<int []>());
@@ -149,38 +156,11 @@ public class SolverParallel2 extends Solver {
 
     }
 
-
-    //    IntStream.range(0, boardSize).filter(c -> canPutQueen(row, c, queens))
-    // .mapToObj(col -> {
-    // 	System.out.println(row + "," + col);
-
-    // 	int newq[] = queens.clone();
-    // 	newq[row] = col;
-    // 	if (row == boardSize -1 ) {
-    // 	    return newq;
-    // 	}
-    // 	else {
-    // 	    return tryNewRow(row+1, newq);
-    // 	}
-    //     });
-
-
-
-    // List<Integer> possibleCols = new ArrayList<Integer>();
-
-    // for (int c = 0; c < boardSize; ++c) {
-    // 	if (canPutQueen(row, c, queens))
-    // 	    possibleCols.add(c);
-    // }
-
-    // System.err.printf("cols at row%d: ", row);
-    // for (int c : possibleCols) {
-    // 	System.err.printf("%d ", c);
-    // }
+    @Override
     public void printReport() {
 	System.out.printf("Thread created: %d\n", threadCreatedCount);
 	System.out.printf("Thread start failed: %d\n", threadStartFailCount);
-	System.out.printf("Max active threads: %d\n", maxActiveThreads);
+	System.out.printf("Max concurrently active threads: %d\n", maxActiveThreads);
 	// for (int i = 0; i < proc.length; ++i) {
 	// 	System.out.printf("[%d] %f msecs\n", i, proc[i].getExcutionTime() / 1000000.0);
 	// }

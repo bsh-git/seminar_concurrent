@@ -14,7 +14,7 @@ PACKAGE_SRCS = $(NQUEENS_PACKAGE_DIR)/Solver.java \
 
 PACKAGE_CLASSES = $(PACKAGE_SRCS:.java=.class)
 
-NQueens.class: NQueens.java # $(PACKAGE_SRCS)
+NQueens.class: NQueens.java $(PACKAGE_SRCS)
 	$(JAVAC) $(CLASSPATHOPT) $*.java $(PACKAGE_SRCS)
 
 $(PACKAGE_CLASSES): $(PACKAGE_SRCS)

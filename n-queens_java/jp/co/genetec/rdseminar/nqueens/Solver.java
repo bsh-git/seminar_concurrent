@@ -9,7 +9,7 @@ import java.util.*;
 public abstract class Solver {
     int boardSize;
 
-     Solver(int size) {
+    Solver(int size, int...options) {
 	boardSize = size;
     }
 
