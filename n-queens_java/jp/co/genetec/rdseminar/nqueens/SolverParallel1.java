@@ -71,12 +71,14 @@ public class SolverParallel1 extends Solver {
 	}
 
 	public void printReport(int no) {
-	    System.out.printf("[%d] %8d %8d %8d %8d\n",
+	    System.out.printf("[%d] %8d %8d %8d %8d %8d \t%f msecs\n",
 			      no,
-			      timestamp[1] - timestamp[0],
-			      timestamp[2] - timestamp[0],
-			      timestamp[3] - timestamp[0],
-			      timestamp[4] - timestamp[0]);
+			      timestamp[0],
+			      timestamp[1],
+			      timestamp[2],
+			      timestamp[3],
+			      timestamp[4],
+			      (timestamp[2] - timestamp[1]) / 10000000.0);
 	}
 	
     }

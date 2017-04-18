@@ -152,11 +152,13 @@ public class SolverParallel2 extends Solver {
 	    for (int r=0; r <= startRow; ++r) {
 		System.out.printf("%d ", queens[r]);
 	    }
-	    System.out.printf(")\t%8d %8d %8d %8d\n",
-			      timestamp[1] - timestamp[0],
-			      timestamp[2] - timestamp[0],
-			      timestamp[3] - timestamp[0],
-			      timestamp[4] - timestamp[0]);
+	    System.out.printf(") %8d %8d %8d %8d %8d \t%f msecs\n",
+			      timestamp[0],
+			      timestamp[1],
+			      timestamp[2],
+			      timestamp[3],
+			      timestamp[4],
+			      (timestamp[2] - timestamp[1]) / 10000000.0);
 	}
 
     }
