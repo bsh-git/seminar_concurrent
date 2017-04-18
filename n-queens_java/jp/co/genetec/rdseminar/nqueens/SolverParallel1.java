@@ -37,10 +37,13 @@ public class SolverParallel1 extends Solver {
     class SolverProc implements Runnable {
 	private int startCol;
 	private List<int []> result;
-	private long startTime, endTime;
 	private Thread thread;
+	//private long startTime, endTime;
+	private long timestamp[];
 	    
 	SolverProc(int col) {
+	    timestamp = new long[5];
+	    timestamp[0] = System.nanoTime();
 	    startCol = col;
 	    thread = new Thread(this);
 	    thread.start();
@@ -50,25 +53,37 @@ public class SolverParallel1 extends Solver {
 	    int queens[] = new int[boardSize];
 
 	    queens[0] = startCol;
-	    startTime = System.nanoTime();
+	    timestamp[1] = System.nanoTime();
 	    result = tryNewRow(1, queens);
-	    endTime = System.nanoTime();
+	    timestamp[2] = System.nanoTime();
 	}
 
 	public List<int []>getResult() throws InterruptedException {
+	    timestamp[3] = System.nanoTime();
 	    thread.join();
+	    timestamp[4] = System.nanoTime();
 	    return result;
 	}
 
 	public long getExcutionTime() {
-	    // System.out.printf("%d %d\n", startTime, endTime);
-	    return endTime - startTime;
+	     // System.out.printf("%d %d\n", startTime, endTime);
+	     return timestamp[2] - timestamp[1];
 	}
+
+	public void printReport(int no) {
+	    System.out.printf("[%d] %8d %8d %8d %8d\n",
+			      no,
+			      timestamp[1] - timestamp[0],
+			      timestamp[2] - timestamp[0],
+			      timestamp[3] - timestamp[0],
+			      timestamp[4] - timestamp[0]);
+	}
+	
     }
 
     public void printReport() {
 	for (int i = 0; i < proc.length; ++i) {
-	    System.out.printf("[%d] %f msecs\n", i, proc[i].getExcutionTime() / 1000000.0);
+	    proc[i].printReport(i);
 	}
     }
 
