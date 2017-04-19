@@ -10,18 +10,22 @@ class NQueens {
     }
 
     public static void main(String[] args) {
-	Getopt options = new Getopt("NQueens", args, "qp:t:");
+	Getopt options = new Getopt("NQueens", args, "qp:t:c:");
 	int c;
 	int boardsize = 8;
-	boolean nolist = false;
 	int howto = 0;
 	Solver solver = null;
 	int nthreads = 0;
+	int repeat = 1;
+	int verbose = 3;
 	
 	while ((c = options.getopt()) != -1) {
 	    switch (c) {
+	    case 'c':
+		repeat = Integer.parseUnsignedInt(options.getOptarg());
+		break;
 	    case 'q':
-		nolist = true;
+		--verbose;
 		break;
 	    case 'p':
 		howto = Integer.parseUnsignedInt(options.getOptarg());
@@ -63,25 +67,30 @@ class NQueens {
 	}
 
 	 
-	long startTime = System.nanoTime();
-	List <int []> patterns = solver.solve();
-	long endTime = System.nanoTime();
+	for (int rep=0; rep < repeat; ++rep) {
+	    long startTime = System.nanoTime();
+	    List <int []> patterns = solver.solve();
+	    long endTime = System.nanoTime();
 
-	System.out.printf("%d-Queens solved in %f msecs. found %d patterns\n", boardsize, (endTime - startTime)/ 1000000.0, patterns.size());
-	if (!nolist) {
-	    for (int[] a: patterns) {
-		boolean needcomma = false;
-		for (int p: a) {
-		    if (needcomma)
-			System.out.print(", ");
-		    needcomma = true;
-		    System.out.print(p);
+	    if (verbose > 0)
+		System.out.printf("%d-Queens solved in %f msecs. found %d patterns\n",
+				  boardsize, (endTime - startTime)/ 1000000.0, patterns.size());
+	    if (verbose > 2) {
+		for (int[] a: patterns) {
+		    boolean needcomma = false;
+		    for (int p: a) {
+			if (needcomma)
+			    System.out.print(", ");
+			needcomma = true;
+			System.out.print(p);
+		    }
+		    System.out.println("");
 		}
-		System.out.println("");
 	    }
-	}
 
-	solver.printReport();
+	    if (verbose > 1)
+		solver.printReport();
+	}
     }
 
 
