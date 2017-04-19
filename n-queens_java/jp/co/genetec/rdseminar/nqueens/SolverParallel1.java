@@ -78,7 +78,7 @@ public class SolverParallel1 extends Solver {
 			      timestamp[2],
 			      timestamp[3],
 			      timestamp[4],
-			      (timestamp[2] - timestamp[1]) / 10000000.0);
+			      (timestamp[2] - timestamp[1]) / 1000000.0);
 	}
 	
     }

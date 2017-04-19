@@ -12,7 +12,6 @@ public class SolverParallel2 extends Solver {
     int threadCreatedCount = 0;
     int activeThreads = 0;
     int maxActiveThreads = 0;
-    int taskCount = 0;
     int maxTasks = 20;
     SolverTask tasks[];
     int nTasksTotal = 0;
@@ -22,11 +21,12 @@ public class SolverParallel2 extends Solver {
 	if (options.length >= 1) {
 	    maxTasks = options[0];
 	}
-	tasks = new SolverTask[maxTasks];
     }
 
     public List<int []> solve() {
 	int queens[] = new int[boardSize];
+	nTasksTotal = 0;
+	tasks = new SolverTask[maxTasks];
 	return tryNewRow2(0, queens);
     }
 
@@ -158,7 +158,7 @@ public class SolverParallel2 extends Solver {
 			      timestamp[2],
 			      timestamp[3],
 			      timestamp[4],
-			      (timestamp[2] - timestamp[1]) / 10000000.0);
+			      (timestamp[2] - timestamp[1]) / 1000000.0);
 	}
 
     }
