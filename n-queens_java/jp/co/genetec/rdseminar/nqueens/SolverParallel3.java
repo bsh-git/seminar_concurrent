@@ -5,9 +5,11 @@ import java.util.*;
 import jp.co.genetec.rdseminar.nqueens.Solver;
 
 //
-// 解法3: スレッドをたくさん使う
+// 解法4: スレッドをたくさん使う
+//        解放3の修正
 //
-public class SolverParallel2 extends Solver {
+public class SolverParallel3 extends Solver {
+    int activeTasksLimit = 20;
     int threadStartFailCount = 0;
     int threadCreatedCount = 0;
     int currentActiveTasks = 0;
@@ -16,17 +18,19 @@ public class SolverParallel2 extends Solver {
     SolverTask tasks[];
     int nTasksTotal = 0;
 	
-    public SolverParallel2(int size, int... options) {
-	super(size);
+    public SolverParallel3(int size, int... options) {
+	super(size, options);
 	if (options.length >= 1) {
-	    maxTasks = options[0];
+	    activeTasksLimit = options[0];
 	}
     }
 
     public List<int []> solve() {
 	int queens[] = new int[boardSize];
 	nTasksTotal = 0;
-	tasks = new SolverTask[maxTasks];
+	currentActiveTasks = 0;
+	maxActiveTasks = 0;
+	tasks = new SolverTask[200];
 	return tryNewRow2(0, queens);
     }
 
@@ -34,29 +38,45 @@ public class SolverParallel2 extends Solver {
 	List<int []> result = new ArrayList<int []>();
 	int taskidx[] = new int[boardSize];
 	int nMyTasks = 0;
-	
+	int cols[] = new int[boardSize];
+	int nCols = 0;
+
 
 	for (int c = 0; c < boardSize; ++c) {
 	    if (!canPutQueen(row, c, queens)) {
 		continue;
 	    }
-
 	    if (row == boardSize -1) {
 		int answer[] = queens.clone();
 		answer[row] = c;
 		result.add(answer);
 	    }
 	    else {
-		int idx = allocateTaskSlot();
-		if (idx >= 0) {
-		    tasks[idx] = startNewTask(row, c, queens);
-		    taskidx[nMyTasks++] = idx;
+		cols[nCols++] = c;
+	    }
+	}
+
+	int colidx=0;
+	while (colidx < nCols) {
+	    int a[];
+	    final int twozeros[] = {0,0};
+	    
+	    if (nCols - colidx > 1)
+		a = allocateTaskSlots(nCols - colidx);  // start index and length
+	    else
+		a = twozeros;
+
+
+	    if (a[1] > 0) {
+		for (int i=0; i < a[1]; ++i) {
+		    tasks[a[0] + i] = startNewTask(row, cols[colidx++], queens);
+		    taskidx[nMyTasks++] = a[0] + i;
 		}
-		else  {
-		    // これ以上スレッドを増せない時、このスレッドで続きを計算する
-		    queens[row] = c;
-		    result.addAll(tryNewRow(row + 1, queens));
-		}
+	    }
+	    else {
+		// これ以上スレッドを増せない時、このスレッドで続きを計算する
+		queens[row] = cols[colidx++];
+		result.addAll(tryNewRow(row + 1, queens));
 	    }
 	}
 
@@ -72,10 +92,20 @@ public class SolverParallel2 extends Solver {
 	return result;
     }
 
-    private synchronized int allocateTaskSlot() {
-	if (nTasksTotal >= maxTasks)
-	    return -1;
-	return nTasksTotal++;
+    private synchronized int[] allocateTaskSlots(int wanted) {
+	int available = Math.max(0, tasks.length - nTasksTotal);
+	int allowed = Math.max(0, activeTasksLimit - currentActiveTasks);
+	int ret[] = new int [2];
+
+	ret[0] = nTasksTotal;
+	ret[1] = Math.min(Math.min(wanted, available), allowed);
+
+	nTasksTotal += ret[1];
+	currentActiveTasks += ret[1];
+	if (currentActiveTasks > maxActiveTasks)
+	    maxActiveTasks = currentActiveTasks;
+
+	return ret;
     }
 
     SolverTask startNewTask(int row, int col, int queens[]) {
@@ -87,13 +117,9 @@ public class SolverParallel2 extends Solver {
 	catch (java.lang.OutOfMemoryError e) {
 	    synchronized (this) {
 		threadStartFailCount++;
+		currentActiveTasks--;
 	    }
 	    return null;
-	}
-	synchronized (this) {
-	    currentActiveTasks++;
-	    if (currentActiveTasks > maxActiveTasks)
-		maxActiveTasks = currentActiveTasks;
 	}
 	return task;
     }
@@ -130,11 +156,14 @@ public class SolverParallel2 extends Solver {
 	public List<int []>getResult() throws InterruptedException {
 	    timestamp[3] = System.nanoTime();
 	    thread.join();
+	    thread = null;
 	    synchronized(this) {
 		currentActiveTasks--;
 	    }
 	    timestamp[4] = System.nanoTime();
-	    return result;
+	    List <int []>ret = result;
+	    result = null;
+	    return ret;
 	}
 
 	public long getExcutionTime() {
@@ -168,5 +197,7 @@ public class SolverParallel2 extends Solver {
 		tasks[i].printReport(i);
 	}
     }
+
+
 }
 

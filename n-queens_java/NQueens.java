@@ -61,6 +61,15 @@ class NQueens {
 	    else
 		solver = new SolverParallel2(boardsize);
 	    break;
+	case 3:
+	    if (nthreads > 0)
+		solver = new SolverParallel3(boardsize, nthreads);
+	    else
+		solver = new SolverParallel3(boardsize);
+	    break;
+	case 4:
+	    solver = new SolverStream(boardsize);
+	    break;
 	default:
 	    System.err.println("Bad argument to -p");
 	    usage_and_exit();
@@ -73,7 +82,8 @@ class NQueens {
 	    long endTime = System.nanoTime();
 
 	    if (verbose > 0)
-		System.out.printf("%d-Queens solved in %f msecs. found %d patterns\n",
+		System.out.printf("test %d/%d: %d-Queens solved in %f msecs. found %d patterns\n",
+				  rep + 1, repeat,
 				  boardsize, (endTime - startTime)/ 1000000.0, patterns.size());
 	    if (verbose > 2) {
 		for (int[] a: patterns) {
